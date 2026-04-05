@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asistente Biodiverso</title>
+  <meta name="description" content="Asistente Biodiverso para resolver dudas frecuentes sobre biodiversidad en entorno industrial." />
+  <style>
+    :root{
+      --bg:#07182f;
+      --bg2:#0b2345;
+      --panel:#0d1f39;
+      --panel2:#10284b;
+      --line:rgba(255,255,255,.10);
+      --text:#eef5ff;
+      --muted:#aac1df;
+      --cyan:#67dfff;
+      --green:#89f0bc;
+      --green2:#3fd48f;
+      --accent:#9fd0ff;
+      --danger:#ff8c8c;
+      --shadow:0 24px 50px rgba(0,0,0,.28);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(103,223,255,.12), transparent 18%),
+        radial-gradient(circle at 88% 18%, rgba(137,240,188,.12), transparent 16%),
+        linear-gradient(180deg, #061325 0%, #07182f 48%, #091a33 100%);
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size:28px 28px;
+      opacity:.35;
+    }
+    a{color:var(--cyan)}
+    .shell{max-width:1500px;margin:0 auto;padding:18px 18px 28px;position:relative;z-index:1}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:18px;
+      padding:18px 22px;margin-bottom:18px;
+      border:1px solid var(--line);border-radius:24px;
+      background:rgba(10,27,51,.72);backdrop-filter:blur(14px);
+      box-shadow:var(--shadow);
+      position:sticky;top:12px;z-index:10;
+    }
+    .brand h1{margin:0;font-size:28px;letter-spacing:-.04em}
+    .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{
+      border:0;border-radius:16px;padding:13px 18px;font-weight:700;cursor:pointer;
+      transition:.18s transform,.18s opacity,.18s box-shadow;
+    }
+    .btn:hover{transform:translateY(-2px)}
+    .btn-primary{background:linear-gradient(135deg,var(--green),var(--green2));color:#082b2a;box-shadow:0 16px 28px rgba(63,212,143,.25)}
+    .btn-secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--line)}
+    .layout{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+    .card{
+      border:1px solid var(--line);border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(13,31,57,.95), rgba(11,25,45,.95));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .sidebar{padding:0}
+    .hero{
+      padding:26px;
+      background:
+        radial-gradient(circle at 85% 18%, rgba(103,223,255,.18), transparent 18%),
+        radial-gradient(circle at 20% 86%, rgba(137,240,188,.10), transparent 22%),
+        linear-gradient(135deg,#102a50 0%,#0a2141 48%,#081a33 100%);
+    }
+    .eyebrow{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--line);font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--accent)}
+    .hero h2{font-size:38px;line-height:.95;letter-spacing:-.05em;margin:16px 0 12px}
+    .hero p{color:var(--muted);line-height:1.72;margin:0}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+    .stat{padding:14px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+    .stat strong{display:block;font-size:24px}
+    .stat span{font-size:11px;line-height:1.35;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .panel-block{padding:22px 24px;border-top:1px solid var(--line)}
+    .panel-block h3{margin:0 0 12px;font-size:18px;letter-spacing:-.02em}
+    .panel-block p,.panel-block li{color:var(--muted);line-height:1.68;font-size:14px}
+    .chips{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{
+      border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);
+      padding:10px 12px;border-radius:999px;font-size:13px;cursor:pointer;
+      transition:.18s transform,.18s background;
+    }
+    .chip:hover{transform:translateY(-1px);background:rgba(255,255,255,.10)}
+    .resources{display:grid;gap:10px}
+    .resource-link{
+      display:block;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.05);
+      border:1px solid var(--line);text-decoration:none;color:var(--text)
+    }
+    .resource-link small{display:block;color:var(--muted);margin-top:5px;line-height:1.45}
+    .chat-wrap{display:grid;grid-template-rows:auto 1fr auto;min-height:780px}
+    .chat-head{padding:22px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+    .chat-head h2{margin:0;font-size:32px;letter-spacing:-.04em}
+    .chat-head p{margin:8px 0 0;color:var(--muted);line-height:1.65;max-width:820px}
+    .chat-status{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .tag{padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+    .chat-body{padding:24px;display:flex;flex-direction:column;gap:18px;min-height:500px;max-height:calc(100vh - 310px);overflow:auto}
+    .message{display:flex;gap:14px;align-items:flex-start;max-width:900px}
+    .message.user{margin-left:auto;flex-direction:row-reverse}
+    .avatar{
+      width:46px;height:46px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+      font-size:20px;font-weight:800;border:1px solid var(--line);flex:0 0 auto;
+      background:linear-gradient(135deg, rgba(103,223,255,.16), rgba(137,240,188,.12));
+    }
+    .bubble{
+      padding:18px 20px;border-radius:20px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);line-height:1.72;color:var(--text)
+    }
+    .message.user .bubble{background:linear-gradient(135deg, rgba(103,223,255,.14), rgba(255,255,255,.08))}
+    .bubble h4{margin:0 0 10px;font-size:18px}
+    .bubble p{margin:0 0 12px}
+    .bubble p:last-child{margin-bottom:0}
+    .bubble ul{margin:10px 0 12px 20px;padding:0}
+    .bubble li{margin-bottom:7px}
+    .bubble .mini-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    .bubble .mini-links a{display:inline-flex;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--line);text-decoration:none;color:var(--text);font-size:13px}
+    .suggestions{padding:0 24px 18px;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.04)}
+    .composer{padding:18px 24px 24px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end}
+    .composer textarea{
+      resize:none;min-height:72px;max-height:190px;padding:18px 18px;border-radius:20px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:var(--text);font:inherit;outline:none;
+    }
+    .composer textarea::placeholder{color:#9ab1cf}
+    .composer .send-stack{display:flex;flex-direction:column;gap:10px}
+    .footnote{padding:0 24px 20px;color:#9eb7d6;font-size:12px;line-height:1.6}
+    .pill-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .pill-note{display:inline-flex;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .muted{color:var(--muted)}
+    .warning{color:#ffd8a8}
+    @media (max-width:1100px){
+      .layout{grid-template-columns:1fr}
+      .chat-wrap{min-height:unset}
+      .chat-body{max-height:none}
+    }
+    @media (max-width:700px){
+      .topbar{padding:16px;position:static}
+      .brand h1{font-size:22px}
+      .hero h2,.chat-head h2{font-size:28px}
+      .stats{grid-template-columns:1fr}
+      .composer{grid-template-columns:1fr}
+      .message,.message.user{max-width:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Asistente Biodiverso</h1>
+        <p>Chatbox de orientación sobre biodiversidad para empleados. Versión estática lista para GitHub Pages.</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="clearChatBtn">Borrar chat</button>
+        <button class="btn btn-primary" id="introBtn">Ver preguntas ejemplo</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="card sidebar">
+        <section class="hero">
+          <span class="eyebrow">Biodiversidad en entorno industrial</span>
+          <h2>Respuestas rápidas, criterio claro y recursos útiles.</h2>
+          <p>Esta primera versión responde dudas frecuentes sobre biodiversidad, restauración, especies, conectividad ecológica y buenas prácticas en planta. También redirige a recursos de tu ecosistema Biodiverso.</p>
+          <div class="stats">
+            <div class="stat"><strong>1</strong><span>archivo único para subir a GitHub</span></div>
+            <div class="stat"><strong>9</strong><span>bloques temáticos de respuesta</span></div>
+            <div class="stat"><strong>5</strong><span>recursos enlazados</span></div>
+          </div>
+        </section>
+
+        <section class="panel-block">
+          <h3>Qué puede resolver</h3>
+          <div class="chips" id="capabilityChips"></div>
+        </section>
+
+        <section class="panel-block">
+          <h3>Qué no debe hacer</h3>
+          <ul>
+            <li>No sustituye criterio técnico, jurídico ni médico.</li>
+            <li>No debe inventar datos ni confirmar cumplimiento legal.</li>
+            <li>Ante incidentes, vertidos o dudas de sustancias/residuos, deriva a Medio Ambiente/SGA.</li>
+          </ul>
+        </section>
+
+        <section class="panel-block">
+          <h3>Recursos de Biodiverso</h3>
+          <div class="resources" id="resourceList"></div>
+        </section>
+
+        <section class="panel-block">
+          <h3>Preguntas sugeridas</h3>
+          <div class="chips" id="promptChips"></div>
+        </section>
+      </aside>
+
+      <main class="card chat-wrap">
+        <div class="chat-head">
+          <div>
+            <h2>Pregunta al asistente</h2>
+            <p>Escribe una duda breve o pulsa una sugerencia. El asistente intentará darte una respuesta útil y prudente, centrada en biodiversidad aplicada y divulgación rigurosa.</p>
+            <div class="pill-row">
+              <span class="pill-note">Tono profesional</span>
+              <span class="pill-note">Sin greenwashing</span>
+              <span class="pill-note">Pensado para Hub + GitHub</span>
+            </div>
+          </div>
+          <div class="chat-status">
+            <span class="tag">Versión 1</span>
+            <span class="tag">FAQ inteligente</span>
+            <span class="tag">Sin backend</span>
+          </div>
+        </div>
+
+        <div class="chat-body" id="chatBody"></div>
+
+        <div class="suggestions" id="bottomSuggestions"></div>
+
+        <div class="composer">
+          <textarea id="userInput" placeholder="Ejemplo: ¿por qué es importante la conectividad ecológica en una planta industrial?"></textarea>
+          <div class="send-stack">
+            <button class="btn btn-primary" id="sendBtn">Enviar</button>
+            <button class="btn btn-secondary" id="examplesBtn">Más ejemplos</button>
+          </div>
+        </div>
+        <div class="footnote">
+          Este asistente está diseñado como apoyo divulgativo. Si tu duda afecta a cumplimiento legal, incidentes ambientales, seguridad, vertidos, residuos, sustancias peligrosas o decisiones técnicas críticas, consulta el canal interno correspondiente.
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ==========================
+    // CONFIGURACIÓN EDITABLE
+    // ==========================
+
+    const resources = [
+      {
+        title: 'Biblioteca digital de biodiversidad',
+        url: 'https://aug79-droid.github.io/factory-biodiversity-library/#/es',
+        desc: 'Storybooks y contenidos visuales sobre biodiversidad aplicada.'
+      },
+      {
+        title: 'Curso Biodiversidad y Sostenibilidad Real en Airbus',
+        url: 'https://aug79-droid.github.io/Biodiversidad-y-Sostenibilidad-Real-en-Airbus/',
+        desc: 'Curso divulgativo para empleados con enfoque industrial.'
+      },
+      {
+        title: 'BiodiverTrivial Airbus',
+        url: 'https://aug79-droid.github.io/trivia-airbus-quest/',
+        desc: 'Juego interactivo para reforzar conceptos de biodiversidad.'
+      },
+      {
+        title: 'BioLab Airbus',
+        url: 'https://aug79-droid.github.io/bio-airbus-ignite/',
+        desc: 'Experiencia guiada para conectar biomímesis y retos reales.'
+      },
+      {
+        title: 'Escape Room Biodiversidad',
+        url: 'https://aug79-droid.github.io/escape-room-biodiversidad/',
+        desc: 'Dinámica interactiva por salas con retos ambientales.'
+      }
+    ];
+
+    const quickPrompts = [
+      '¿Qué es la biodiversidad?',
+      '¿Por qué importa la conectividad ecológica?',
+      '¿Qué es una especie invasora?',
+      '¿Cómo favorecer polinizadores en planta?',
+      '¿Qué es el greenwashing?',
+      'Dame ideas para una zona verde industrial',
+      '¿Qué indicadores sirven para medir biodiversidad?',
+      '¿Qué recursos de Biodiverso puedo consultar?'
+    ];
+
+    const capabilityTags = [
+      'Conceptos básicos de biodiversidad',
+      'Especies autóctonas e invasoras',
+      'Conectividad ecológica y corredores',
+      'Polinizadores y hábitats',
+      'Buenas prácticas en entorno industrial',
+      'Indicadores y seguimiento',
+      'Greenwashing vs impacto real',
+      'Restauración ecológica',
+      'Derivación prudente a canales internos'
+    ];
+
+    const intents = [
+      {
+        id:'biodiversidad',
+        title:'Qué es la biodiversidad',
+        keywords:['biodiversidad','que es biodiversidad','qué es biodiversidad','diversidad biologica','diversidad biológica'],
+        response:`
+          <h4>Qué entendemos por biodiversidad</h4>
+          <p>La biodiversidad no es solo “tener muchas especies”. Incluye tres niveles conectados:</p>
+          <ul>
+            <li><strong>Diversidad de especies</strong>: variedad de plantas, animales, hongos y microorganismos.</li>
+            <li><strong>Diversidad genética</strong>: variabilidad dentro de cada especie, clave para adaptarse.</li>
+            <li><strong>Diversidad de ecosistemas</strong>: bosques, matorrales, humedales, suelos, charcas, etc.</li>
+          </ul>
+          <p>En un entorno industrial importa porque la forma en que gestionamos suelo, agua, vegetación, luz, ruido o infraestructuras influye directamente en esa biodiversidad.</p>
+        `,
+        followups:['¿Qué amenazas afectan más a la biodiversidad?','¿Qué indicadores sirven para medirla?']
+      },
+      {
+        id:'conectividad',
+        title:'Conectividad ecológica',
+        keywords:['conectividad','corredor','corredor ecologico','corredor ecológico','fragmentacion','fragmentación','paso de fauna'],
+        response:`
+          <h4>Por qué importa la conectividad ecológica</h4>
+          <p>Cuando los hábitats quedan aislados por carreteras, vallados, edificios o superficies selladas, muchas especies tienen más difícil desplazarse, alimentarse o reproducirse.</p>
+          <p>La conectividad ecológica busca <strong>mantener o recuperar conexiones funcionales</strong> entre espacios verdes y microhábitats.</p>
+          <ul>
+            <li>Favorece el movimiento de fauna.</li>
+            <li>Mejora la resiliencia del ecosistema.</li>
+            <li>Reduce el efecto de la fragmentación.</li>
+            <li>Hace que las actuaciones locales tengan más valor real.</li>
+          </ul>
+          <p>En planta, ejemplos útiles pueden ser setos, bandas vegetales, continuidad de zonas verdes, refugios bien ubicados y diseño que evite “islas” ecológicas aisladas.</p>
+        `,
+        followups:['Dame ideas para una zona verde industrial','¿Qué indicadores sirven para medir biodiversidad?']
+      },
+      {
+        id:'invasoras',
+        title:'Especies invasoras',
+        keywords:['invasora','invasoras','especie invasora','especies invasoras','alóctona','aloctona','exotica','exótica'],
+        response:`
+          <h4>Qué es una especie invasora</h4>
+          <p>Una especie invasora suele ser una especie introducida fuera de su área natural que <strong>se expande y desplaza a especies nativas</strong> o altera el equilibrio ecológico.</p>
+          <p>No toda especie exótica es invasora, pero una invasora sí puede generar impactos ecológicos, económicos o incluso sanitarios.</p>
+          <p>Ante sospecha de invasoras en una instalación, lo prudente es:</p>
+          <ul>
+            <li>Evitar actuaciones improvisadas.</li>
+            <li>Identificar correctamente la especie.</li>
+            <li>Valorar impacto y medidas de control adecuadas.</li>
+            <li>Coordinarlo con el canal ambiental interno si procede.</li>
+          </ul>
+        `,
+        followups:['¿Qué plantas conviene usar en restauración?','¿Cómo favorecer polinizadores en planta?']
+      },
+      {
+        id:'polinizadores',
+        title:'Polinizadores',
+        keywords:['polinizador','polinizadores','abejas','mariposas','insectos','hotel de insectos'],
+        response:`
+          <h4>Cómo favorecer polinizadores de forma seria</h4>
+          <p>Ayudar a polinizadores no consiste solo en poner un hotel de insectos. Funciona mejor cuando se combina:</p>
+          <ul>
+            <li><strong>Vegetación autóctona diversa</strong> con floración escalonada.</li>
+            <li><strong>Reducción de tratamientos agresivos</strong> sobre zonas verdes.</li>
+            <li><strong>Gestión diferenciada</strong>, evitando siegas excesivas y uniformes.</li>
+            <li><strong>Conectividad</strong> entre pequeños espacios de valor ecológico.</li>
+            <li><strong>Seguimiento</strong> para ver si la medida realmente funciona.</li>
+          </ul>
+          <p>Los hoteles de insectos pueden ser útiles, pero son una medida complementaria, no el núcleo de la estrategia.</p>
+        `,
+        followups:['Dame ideas para una zona verde industrial','¿Qué es el greenwashing?']
+      },
+      {
+        id:'industrial',
+        title:'Buenas prácticas en planta',
+        keywords:['planta','industrial','entorno industrial','fabrica','fábrica','airbus','instalacion','instalación','zona verde industrial'],
+        response:`
+          <h4>Buenas prácticas de biodiversidad en entorno industrial</h4>
+          <p>Las medidas con más valor suelen ser las que combinan diseño, gestión y seguimiento:</p>
+          <ul>
+            <li>Restaurar con <strong>especies autóctonas</strong> adaptadas al sitio.</li>
+            <li>Reducir superficies innecesariamente selladas cuando sea viable.</li>
+            <li>Crear microhábitats: setos, bandas floridas, refugios, charcas temporales bien planteadas.</li>
+            <li>Controlar contaminación lumínica y molestias sobre fauna.</li>
+            <li>Medir resultados con indicadores y revisar actuaciones.</li>
+          </ul>
+          <p>Lo importante es evitar acciones solo decorativas o aisladas que no tengan continuidad ni evaluación.</p>
+        `,
+        followups:['¿Qué es el greenwashing?','¿Qué indicadores sirven para medir biodiversidad?']
+      },
+      {
+        id:'indicadores',
+        title:'Indicadores',
+        keywords:['indicador','indicadores','medir','kpi','bioindicador','seguimiento','monitoreo','monitorizacion','monitorización'],
+        response:`
+          <h4>Qué se puede medir</h4>
+          <p>Para hablar de impacto real conviene combinar indicadores de actuación con indicadores ecológicos.</p>
+          <ul>
+            <li><strong>Actuaciones</strong>: superficie restaurada, longitud de setos, número de refugios, reducción de siega intensiva.</li>
+            <li><strong>Respuesta ecológica</strong>: presencia de especies, uso por fauna, riqueza de polinizadores, bioindicadores, cobertura vegetal.</li>
+            <li><strong>Calidad del hábitat</strong>: conectividad, estructura vegetal, presión lumínica o perturbaciones.</li>
+          </ul>
+          <p>Medir solo “cuántas acciones hicimos” no basta. Lo valioso es saber si el ecosistema respondió de verdad.</p>
+        `,
+        followups:['¿Qué es el greenwashing?','¿Por qué importa la conectividad ecológica?']
+      },
+      {
+        id:'greenwashing',
+        title:'Greenwashing',
+        keywords:['greenwashing','lavado verde','postureo verde','imagen verde'],
+        response:`
+          <h4>Cómo distinguir una acción útil de greenwashing</h4>
+          <p>Una acción se acerca al greenwashing cuando comunica mucho y demuestra poco.</p>
+          <ul>
+            <li>Promete impacto sin indicadores.</li>
+            <li>No parte de un diagnóstico.</li>
+            <li>No tiene seguimiento.</li>
+            <li>Se centra en la imagen, no en la mejora ecológica.</li>
+          </ul>
+          <p>Una actuación seria, en cambio, define objetivo, ejecuta, mide y ajusta. En biodiversidad importa menos el titular y más la evidencia.</p>
+        `,
+        followups:['¿Qué indicadores sirven para medir biodiversidad?','Dame ideas para una zona verde industrial']
+      },
+      {
+        id:'restauracion',
+        title:'Restauración ecológica',
+        keywords:['restauracion','restauración','restaurar','autóctona','autoctona','siembra','plantacion','plantación','suelo'],
+        response:`
+          <h4>Cómo enfocar una restauración con criterio</h4>
+          <p>Antes de plantar, conviene mirar el sitio: suelo, clima, perturbaciones, agua disponible, exposición, mantenimiento posible y función ecológica esperada.</p>
+          <p>Después, prioriza:</p>
+          <ul>
+            <li>Especies autóctonas y compatibles con el entorno.</li>
+            <li>Diversidad estructural, no monocultivo ornamental.</li>
+            <li>Gestión posterior realista.</li>
+            <li>Seguimiento para corregir si la respuesta ecológica no llega.</li>
+          </ul>
+          <p>La restauración eficaz no es “plantar por plantar”, sino reconstruir funciones ecológicas.</p>
+        `,
+        followups:['¿Qué es una especie invasora?','¿Qué indicadores sirven para medir biodiversidad?']
+      },
+      {
+        id:'recursos',
+        title:'Recursos Biodiverso',
+        keywords:['recurso','recursos','curso','cursos','storybook','biblioteca','quiz','trivial','escape room','biolab'],
+        responseBuilder: () => {
+          const links = resources.map(r => `<a href="${r.url}" target="_blank" rel="noopener">${r.title}</a>`).join(' · ');
+          return `
+            <h4>Recursos disponibles</h4>
+            <p>Puedes seguir profundizando con varios materiales de tu ecosistema Biodiverso:</p>
+            <ul>
+              <li><strong>Biblioteca digital</strong> para lectura y sensibilización.</li>
+              <li><strong>Curso</strong> sobre biodiversidad y sostenibilidad en Airbus.</li>
+              <li><strong>BiodiverTrivial</strong> para repasar conceptos de forma interactiva.</li>
+              <li><strong>BioLab Airbus</strong> para explorar biomímesis e innovación.</li>
+              <li><strong>Escape Room</strong> para sesiones gamificadas.</li>
+            </ul>
+            <p>${links}</p>
+          `;
+        },
+        followups:['¿Qué es la biodiversidad?','¿Qué es el greenwashing?']
+      },
+      {
+        id:'derivacion',
+        title:'Derivación prudente',
+        keywords:['vertido','incidente','residuo','residuos','sustancia peligrosa','cumplimiento legal','legal','normativa','auditoria','auditoría','emergencia'],
+        response:`
+          <h4>Esta duda requiere canal interno</h4>
+          <p class="warning">Puedo orientarte de forma general, pero este tema no debería resolverse solo con un chat divulgativo.</p>
+          <p>Si afecta a vertidos, residuos, sustancias peligrosas, emergencia, cumplimiento legal o decisiones técnicas críticas, lo correcto es acudir al canal interno correspondiente: responsable ambiental, SGA, prevención, mantenimiento o procedimiento aplicable.</p>
+          <p>Si quieres, reformula la pregunta en clave divulgativa y te doy contexto general de biodiversidad relacionado.</p>
+        `,
+        followups:['¿Qué es la biodiversidad?','¿Qué es el greenwashing?']
+      }
+    ];
+
+    const fallbackResponse = `
+      <h4>No tengo una coincidencia clara</h4>
+      <p>Puedo ayudarte mejor si formulas la duda con uno de estos enfoques:</p>
+      <ul>
+        <li>concepto: biodiversidad, conectividad, polinizadores, invasoras</li>
+        <li>aplicación: zona verde industrial, restauración, medidas en planta</li>
+        <li>seguimiento: indicadores, bioindicadores, medición</li>
+        <li>criterio: greenwashing frente a impacto real</li>
+      </ul>
+      <p>También puedes pulsar una pregunta sugerida.</p>
+    `;
+
+    // ==========================
+    // LÓGICA DEL CHAT
+    // ==========================
+
+    const chatBody = document.getElementById('chatBody');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const examplesBtn = document.getElementById('examplesBtn');
+    const introBtn = document.getElementById('introBtn');
+    const clearChatBtn = document.getElementById('clearChatBtn');
+    const promptChips = document.getElementById('promptChips');
+    const bottomSuggestions = document.getElementById('bottomSuggestions');
+    const capabilityChips = document.getElementById('capabilityChips');
+    const resourceList = document.getElementById('resourceList');
+
+    function normalizeText(text=''){
+      return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-z0-9ñáéíóúü\s]/gi,' ')
+        .replace(/\s+/g,' ')
+        .trim();
+    }
+
+    function createChip(text, container, onClick){
+      const btn = document.createElement('button');
+      btn.className = 'chip';
+      btn.textContent = text;
+      btn.addEventListener('click', onClick);
+      container.appendChild(btn);
+    }
+
+    function renderSidebar(){
+      capabilityTags.forEach(tag => createChip(tag, capabilityChips, () => ask(tag)));
+      quickPrompts.forEach(prompt => createChip(prompt, promptChips, () => ask(prompt)));
+      ['¿Qué es la biodiversidad?','¿Qué es una especie invasora?','¿Cómo favorecer polinizadores?','¿Qué es el greenwashing?'].forEach(prompt => createChip(prompt, bottomSuggestions, () => ask(prompt)));
+
+      resources.forEach(r => {
+        const a = document.createElement('a');
+        a.className = 'resource-link';
+        a.href = r.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.innerHTML = `<strong>${r.title}</strong><small>${r.desc}</small>`;
+        resourceList.appendChild(a);
+      });
+    }
+
+    function addMessage(role, html){
+      const wrapper = document.createElement('div');
+      wrapper.className = `message ${role}`;
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = role === 'user' ? 'Tú' : 'AI';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = html;
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(bubble);
+      chatBody.appendChild(wrapper);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      return bubble;
+    }
+
+    function scoreIntent(input, intent){
+      const text = normalizeText(input);
+      let score = 0;
+      intent.keywords.forEach(k => {
+        const key = normalizeText(k);
+        if(text.includes(key)) score += key.split(' ').length > 1 ? 4 : 2;
+      });
+
+      const tokens = text.split(' ');
+      intent.keywords.forEach(k => {
+        const key = normalizeText(k);
+        const keyTokens = key.split(' ');
+        keyTokens.forEach(kt => {
+          if(tokens.includes(kt) && kt.length > 4) score += 1;
+        });
+      });
+      return score;
+    }
+
+    function findBestIntent(input){
+      const ranked = intents
+        .map(intent => ({ intent, score: scoreIntent(input, intent) }))
+        .sort((a,b) => b.score - a.score);
+      return ranked[0].score > 0 ? ranked[0].intent : null;
+    }
+
+    function renderFollowups(bubble, followups=[]){
+      if(!followups.length) return;
+      const div = document.createElement('div');
+      div.className = 'mini-links';
+      followups.forEach(text => {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          ask(text);
+        });
+        div.appendChild(a);
+      });
+      bubble.appendChild(div);
+    }
+
+    function replyTo(input){
+      const bestIntent = findBestIntent(input);
+      if(bestIntent){
+        const html = bestIntent.responseBuilder ? bestIntent.responseBuilder() : bestIntent.response;
+        const bubble = addMessage('assistant', html);
+        renderFollowups(bubble, bestIntent.followups || []);
+      } else {
+        const bubble = addMessage('assistant', fallbackResponse);
+        renderFollowups(bubble, quickPrompts.slice(0,4));
+      }
+    }
+
+    function ask(text){
+      const clean = text.trim();
+      if(!clean) return;
+      addMessage('user', `<p>${escapeHtml(clean)}</p>`);
+      replyTo(clean);
+      userInput.value = '';
+      userInput.focus();
+    }
+
+    function escapeHtml(str){
+      return str
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
+
+    function showIntro(){
+      chatBody.innerHTML = '';
+      addMessage('assistant', `
+        <h4>Bienvenido al Asistente Biodiverso</h4>
+        <p>Puedo ayudarte con dudas frecuentes sobre biodiversidad, especies invasoras, polinizadores, conectividad ecológica, greenwashing, restauración e indicadores.</p>
+        <p>Empieza por una pregunta breve o prueba con una de estas:</p>
+        <ul>
+          <li>¿Qué es la biodiversidad?</li>
+          <li>¿Por qué importa la conectividad ecológica?</li>
+          <li>¿Cómo favorecer polinizadores en una planta industrial?</li>
+          <li>¿Qué indicadores sirven para medir biodiversidad?</li>
+        </ul>
+      `);
+      const bubble = chatBody.querySelector('.bubble:last-child');
+      renderFollowups(bubble, quickPrompts.slice(0,4));
+    }
+
+    sendBtn.addEventListener('click', () => ask(userInput.value));
+    examplesBtn.addEventListener('click', showIntro);
+    introBtn.addEventListener('click', showIntro);
+    clearChatBtn.addEventListener('click', showIntro);
+    userInput.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        ask(userInput.value);
+      }
+    });
+
+    renderSidebar();
+    showIntro();
+  </script>
+</body>
+</html>
