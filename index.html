@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buscador de dudas | Biodiverso</title>
+  <meta name="description" content="Buscador de dudas sobre biodiversidad para empleados de Airbus." />
+  <style>
+    :root{
+      --bg:#071427;
+      --bg2:#0b1f3b;
+      --panel:#0d223f;
+      --line:rgba(255,255,255,.10);
+      --text:#eef4ff;
+      --muted:#adc0dd;
+      --cyan:#6ddfff;
+      --green:#8cf0c0;
+      --green-strong:#38c983;
+      --chip:rgba(255,255,255,.06);
+      --shadow:0 26px 60px rgba(0,0,0,.28);
+      --radius:26px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(109,223,255,.16), transparent 18%),
+        radial-gradient(circle at 88% 12%, rgba(140,240,192,.10), transparent 18%),
+        linear-gradient(180deg,#061223 0%,#08172c 48%,#0a1930 100%);
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size:30px 30px;
+      opacity:.34;
+    }
+    a{color:var(--cyan)}
+    .wrap{max-width:1060px;margin:0 auto;padding:26px 18px 44px;position:relative;z-index:1}
+    .hero{
+      border:1px solid var(--line);
+      border-radius:30px;
+      background:
+        radial-gradient(circle at 84% 20%, rgba(109,223,255,.14), transparent 20%),
+        radial-gradient(circle at 18% 85%, rgba(140,240,192,.08), transparent 22%),
+        linear-gradient(145deg,#0d274a 0%, #0a1d38 52%, #08172c 100%);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .hero-top{padding:34px 34px 18px}
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--cyan);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    h1{
+      font-size:clamp(42px,7vw,72px);
+      line-height:.92;
+      letter-spacing:-.06em;
+      margin:18px 0 14px;
+    }
+    .subtitle{
+      margin:0;
+      max-width:760px;
+      color:var(--muted);
+      font-size:18px;
+      line-height:1.72;
+    }
+    .search-zone{
+      padding:24px 34px 34px;
+    }
+    .search-card{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(7,19,37,.62);
+      backdrop-filter:blur(12px);
+      border-radius:24px;
+      padding:18px;
+      box-shadow:0 20px 40px rgba(0,0,0,.22);
+    }
+    .search-bar{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      border-radius:20px;
+      padding:14px 16px;
+    }
+    .search-icon{
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg, rgba(109,223,255,.16), rgba(140,240,192,.12));
+      border:1px solid rgba(255,255,255,.08);
+      flex:0 0 auto;
+    }
+    .search-icon svg{width:22px;height:22px;stroke:#fff;stroke-width:2.2;fill:none}
+    input[type="text"]{
+      width:100%;
+      border:0;
+      outline:0;
+      background:transparent;
+      color:var(--text);
+      font-size:18px;
+      font-family:inherit;
+    }
+    input[type="text"]::placeholder{color:#9eb3d0}
+    .search-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .btn{
+      border:0;
+      border-radius:16px;
+      padding:12px 16px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.18s transform,.18s opacity;
+      font-family:inherit;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg,var(--green),var(--green-strong));color:#062a22}
+    .btn-secondary{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--line)}
+    .hint{margin:16px 4px 0;color:var(--muted);font-size:14px;line-height:1.65}
+    .chips{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .chip{
+      border:1px solid var(--line);
+      background:var(--chip);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:14px;
+      cursor:pointer;
+      transition:.18s transform,.18s background;
+    }
+    .chip:hover{transform:translateY(-1px);background:rgba(255,255,255,.10)}
+    .results{
+      margin-top:18px;
+      display:grid;
+      gap:18px;
+    }
+    .answer-card,.related-card,.footer-card{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(12,28,52,.96), rgba(10,22,41,.96));
+      box-shadow:var(--shadow);
+    }
+    .answer-card{padding:28px}
+    .answer-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:14px;
+    }
+    .label{
+      display:inline-flex;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--cyan);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.11em;
+      text-transform:uppercase;
+    }
+    .question-title{
+      margin:0;
+      font-size:clamp(26px,3vw,38px);
+      line-height:1;
+      letter-spacing:-.04em;
+    }
+    .answer-text{
+      color:var(--text);
+      font-size:17px;
+      line-height:1.82;
+    }
+    .note{
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.65;
+    }
+    .related-card{padding:22px 24px}
+    .related-card h2,.footer-card h2{
+      margin:0 0 14px;
+      font-size:22px;
+      letter-spacing:-.03em;
+    }
+    .related-list{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+    .related-item{
+      text-align:left;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:14px 15px;
+      color:var(--text);
+      cursor:pointer;
+      font:inherit;
+      transition:.18s transform,.18s background;
+    }
+    .related-item:hover{transform:translateY(-1px);background:rgba(255,255,255,.07)}
+    .footer-card{padding:22px 24px}
+    .resource-links{display:grid;gap:10px}
+    .resource-links a{
+      display:block;
+      padding:14px 16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      text-decoration:none;
+      color:var(--text);
+    }
+    .resource-links a small{display:block;color:var(--muted);margin-top:6px;line-height:1.5}
+    .empty-state{
+      padding:30px 28px;
+      text-align:left;
+      color:var(--muted);
+      line-height:1.75;
+    }
+    .empty-state strong{color:var(--text)}
+    @media (max-width:760px){
+      .wrap{padding:18px 14px 28px}
+      .hero-top,.search-zone,.answer-card,.related-card,.footer-card{padding-left:20px;padding-right:20px}
+      .search-bar{align-items:flex-start}
+      .search-icon{width:42px;height:42px}
+      input[type="text"]{font-size:16px}
+      .related-list{grid-template-columns:1fr}
+      .answer-top{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div class="eyebrow">Biodiverso · Airbus</div>
+        <h1>Buscador de dudas<br>sobre biodiversidad</h1>
+        <p class="subtitle">Escribe tu pregunta con tus propias palabras. El buscador te devuelve una respuesta clara, breve y útil para consultas habituales sobre biodiversidad en entorno industrial.</p>
+      </div>
+      <div class="search-zone">
+        <div class="search-card">
+          <div class="search-bar">
+            <div class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l5 5"></path></svg>
+            </div>
+            <input id="searchInput" type="text" placeholder="Ejemplo: ¿Qué es una especie invasora?" autocomplete="off" />
+          </div>
+          <div class="search-actions">
+            <button class="btn btn-primary" id="searchBtn">Buscar respuesta</button>
+            <button class="btn btn-secondary" id="clearBtn">Limpiar</button>
+          </div>
+          <p class="hint">También puedes probar con dudas como: “¿Qué es greenwashing?”, “¿Qué es un corredor ecológico?”, “¿Por qué son importantes los polinizadores?”</p>
+          <div class="chips" id="quickChips"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="results" id="results"></section>
+  </main>
+
+  <script>
+    const knowledgeBase = [
+      {
+        title: '¿Qué es la biodiversidad?',
+        answer: 'La biodiversidad es la variedad de vida en todos sus niveles: especies, diversidad genética y ecosistemas. No se refiere solo a animales o plantas llamativos, sino también a microorganismos, suelos vivos, interacciones ecológicas y funciones que sostienen el equilibrio del entorno.',
+        tags: ['biodiversidad', 'que es biodiversidad', 'definicion biodiversidad', 'ecosistemas', 'especies', 'genes', 'diversidad biológica'],
+        related: ['¿Qué es un ecosistema?', '¿Qué es un bioindicador?']
+      },
+      {
+        title: '¿Qué es un ecosistema?',
+        answer: 'Un ecosistema es el conjunto formado por los seres vivos, el medio físico en el que viven y las relaciones que se establecen entre ellos. En un entorno industrial también puede haber ecosistemas o microhábitats valiosos, como taludes vegetados, charcas temporales, setos o suelos con actividad biológica.',
+        tags: ['ecosistema', 'que es un ecosistema', 'habitat', 'hábitat', 'microhábitat'],
+        related: ['¿Qué es la biodiversidad?', '¿Qué es un corredor ecológico?']
+      },
+      {
+        title: '¿Qué es una especie invasora?',
+        answer: 'Una especie invasora es una especie introducida fuera de su área natural que puede expandirse y causar impactos negativos sobre especies autóctonas, ecosistemas, economía o salud. No toda especie exótica es invasora, pero cuando desplaza a las nativas o altera el equilibrio ecológico sí se convierte en un problema real de gestión.',
+        tags: ['especie invasora', 'invasora', 'especies invasoras', 'exótica invasora', 'especie exótica'],
+        related: ['¿Por qué es mejor usar especies autóctonas?', '¿Qué es la biodiversidad?']
+      },
+      {
+        title: '¿Por qué es mejor usar especies autóctonas?',
+        answer: 'Las especies autóctonas están adaptadas al clima, al suelo y a las interacciones ecológicas locales. Por eso suelen requerir menos mantenimiento, favorecen mejor a la fauna del entorno y reducen el riesgo de introducir desequilibrios ecológicos. En restauración o revegetación, suelen ser la opción más sólida y coherente.',
+        tags: ['autóctonas', 'especies autóctonas', 'flora autóctona', 'plantas autóctonas', 'vegetación autóctona'],
+        related: ['¿Qué es una especie invasora?', '¿Qué diferencia hay entre restauración y revegetación?']
+      },
+      {
+        title: '¿Qué es un corredor ecológico?',
+        answer: 'Un corredor ecológico es una franja o conjunto de espacios que facilita el movimiento de las especies entre hábitats. Sirve para reducir el efecto de la fragmentación, mejorar la conectividad y aumentar la resiliencia ecológica. En un entorno como Airbus Getafe, puede traducirse en bandas vegetales, setos, zonas permeables o conexiones entre áreas verdes.',
+        tags: ['corredor ecológico', 'corredor verde', 'conectividad', 'conectividad ecológica', 'fragmentación'],
+        related: ['¿Qué es un ecosistema?', '¿Por qué son importantes los polinizadores?']
+      },
+      {
+        title: '¿Por qué son importantes los polinizadores?',
+        answer: 'Los polinizadores, como abejas, mariposas y otros insectos, ayudan a la reproducción de muchas plantas. Además, forman parte de cadenas tróficas y sostienen funciones ecológicas clave. Favorecerlos no es solo “poner flores”, sino diseñar hábitats útiles, con especies adecuadas, continuidad temporal de floración y menor presión química.',
+        tags: ['polinizadores', 'polinizador', 'abejas', 'mariposas', 'insectos polinizadores'],
+        related: ['¿Qué es la biodiversidad?', '¿Qué medidas favorecen la biodiversidad en una planta industrial?']
+      },
+      {
+        title: '¿Qué diferencia hay entre restauración y revegetación?',
+        answer: 'La revegetación consiste principalmente en volver a cubrir un área con vegetación. La restauración ecológica va más allá: busca recuperar funciones, estructura, dinámica y relaciones ecológicas del sistema. Es decir, no solo se trata de que “haya plantas”, sino de que el lugar vuelva a funcionar mejor desde el punto de vista ecológico.',
+        tags: ['restauración', 'revegetación', 'diferencia restauración revegetación', 'restaurar', 'revegetar'],
+        related: ['¿Por qué es mejor usar especies autóctonas?', '¿Qué es un bioindicador?']
+      },
+      {
+        title: '¿Qué es un bioindicador?',
+        answer: 'Un bioindicador es un organismo o comunidad biológica cuya presencia, ausencia o estado ayuda a interpretar la calidad ambiental de un lugar. Algunos insectos, líquenes, plantas o macroinvertebrados pueden alertar sobre cambios en suelo, agua o hábitat antes de que el deterioro sea evidente a simple vista.',
+        tags: ['bioindicador', 'bioindicadores', 'indicador biológico', 'indicador ecológico'],
+        related: ['¿Qué es la biodiversidad?', '¿Qué diferencia hay entre restauración y revegetación?']
+      },
+      {
+        title: '¿Qué es greenwashing?',
+        answer: 'Greenwashing es comunicar una imagen ambiental positiva sin una base real, suficiente o verificable. Puede ocurrir cuando se exagera una acción menor, se omiten impactos relevantes o se usan mensajes “verdes” sin datos ni resultados medibles. Para evitarlo, conviene apoyar la comunicación en acciones concretas, indicadores y seguimiento.',
+        tags: ['greenwashing', 'lavado verde', 'marketing verde engañoso', 'imagen verde'],
+        related: ['¿Qué medidas favorecen la biodiversidad en una planta industrial?', '¿Qué es un bioindicador?']
+      },
+      {
+        title: '¿Qué medidas favorecen la biodiversidad en una planta industrial?',
+        answer: 'Entre las medidas más útiles suelen estar: usar vegetación autóctona diversa, crear conectividad entre zonas verdes, reducir la presión de iluminación nocturna, mejorar hábitats para polinizadores, restaurar suelos degradados, minimizar el uso de fitosanitarios y hacer seguimiento con indicadores. Lo importante es que las acciones no sean aisladas, sino coherentes y medibles.',
+        tags: ['medidas', 'planta industrial', 'entorno industrial', 'biodiversidad en empresa', 'acciones biodiversidad', 'airbus'],
+        related: ['¿Qué es greenwashing?', '¿Por qué son importantes los polinizadores?']
+      },
+      {
+        title: '¿Por qué la iluminación nocturna puede perjudicar a la fauna?',
+        answer: 'La iluminación artificial nocturna puede alterar ritmos biológicos, orientación, alimentación y reproducción de muchas especies. Algunos insectos se desorientan, ciertas aves modifican su comportamiento y la fauna nocturna pierde calidad de hábitat. Por eso conviene revisar intensidad, horario, dirección y tipo de luminaria.',
+        tags: ['iluminación nocturna', 'contaminación lumínica', 'luz artificial', 'fauna nocturna'],
+        related: ['¿Qué medidas favorecen la biodiversidad en una planta industrial?', '¿Por qué son importantes los polinizadores?']
+      },
+      {
+        title: '¿Por qué el suelo es tan importante para la biodiversidad?',
+        answer: 'El suelo no es solo soporte físico. Es un sistema vivo donde ocurren procesos clave como infiltración de agua, reciclaje de nutrientes, almacenamiento de carbono y actividad microbiana. Cuando el suelo se sella, compacta o degrada, se pierde gran parte de esa funcionalidad ecológica y disminuyen las oportunidades para muchas especies.',
+        tags: ['suelo', 'suelos', 'sellado', 'compactación', 'microorganismos', 'suelo vivo'],
+        related: ['¿Qué es un bioindicador?', '¿Qué medidas favorecen la biodiversidad en una planta industrial?']
+      }
+    ];
+
+    const quickQueries = [
+      '¿Qué es una especie invasora?',
+      '¿Qué es greenwashing?',
+      '¿Qué es un corredor ecológico?',
+      '¿Por qué son importantes los polinizadores?',
+      '¿Qué diferencia hay entre restauración y revegetación?',
+      '¿Qué medidas favorecen la biodiversidad en una planta industrial?'
+    ];
+
+    const resourceLinks = [
+      {
+        title: 'Biblioteca digital de biodiversidad en fábrica',
+        url: 'https://aug79-droid.github.io/factory-biodiversity-library/#/es',
+        desc: 'Storybooks y contenidos divulgativos para profundizar en biodiversidad aplicada.'
+      },
+      {
+        title: 'Curso Biodiversidad y Sostenibilidad Real en Airbus',
+        url: 'https://aug79-droid.github.io/Biodiversidad-y-Sostenibilidad-Real-en-Airbus/',
+        desc: 'Curso digital de referencia para empleados de Airbus.'
+      },
+      {
+        title: 'BioLab Airbus',
+        url: 'https://aug79-droid.github.io/bio-airbus-ignite/',
+        desc: 'Experiencia práctica de biomímesis e innovación inspirada en la naturaleza.'
+      },
+      {
+        title: 'BiodiverTrivial Airbus',
+        url: 'https://aug79-droid.github.io/trivia-airbus-quest/',
+        desc: 'Juego interactivo para aprender biodiversidad de forma dinámica.'
+      },
+      {
+        title: 'Escape Room de biodiversidad',
+        url: 'https://aug79-droid.github.io/escape-room-biodiversidad/',
+        desc: 'Actividad digital gamificada para sensibilización ambiental.'
+      }
+    ];
+
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const quickChips = document.getElementById('quickChips');
+    const results = document.getElementById('results');
+
+    function normalize(text){
+      return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9ñ\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function scoreEntry(query, entry){
+      const q = normalize(query);
+      const title = normalize(entry.title);
+      const tags = entry.tags.map(normalize);
+      const words = q.split(' ').filter(Boolean);
+      let score = 0;
+
+      if (!q) return 0;
+      if (title === q) score += 200;
+      if (title.includes(q)) score += 110;
+
+      tags.forEach(tag => {
+        if (tag === q) score += 160;
+        if (tag.includes(q)) score += 80;
+      });
+
+      words.forEach(word => {
+        if (title.includes(word)) score += 18;
+        tags.forEach(tag => { if (tag.includes(word)) score += 14; });
+        if (normalize(entry.answer).includes(word)) score += 4;
+      });
+
+      return score;
+    }
+
+    function findBestMatch(query){
+      const ranked = knowledgeBase
+        .map(entry => ({ entry, score: scoreEntry(query, entry) }))
+        .sort((a,b) => b.score - a.score);
+
+      return ranked[0] && ranked[0].score > 20 ? ranked[0].entry : null;
+    }
+
+    function findRelated(entry){
+      if (!entry || !entry.related) return [];
+      return entry.related
+        .map(title => knowledgeBase.find(item => item.title === title))
+        .filter(Boolean)
+        .slice(0,4);
+    }
+
+    function renderResources(){
+      return `
+        <article class="footer-card">
+          <h2>Recursos de Biodiverso</h2>
+          <div class="resource-links">
+            ${resourceLinks.map(link => `
+              <a href="${link.url}" target="_blank" rel="noopener noreferrer">
+                ${link.title}
+                <small>${link.desc}</small>
+              </a>
+            `).join('')}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderEmpty(){
+      results.innerHTML = `
+        <article class="answer-card empty-state">
+          <strong>Escribe una duda arriba y pulsa “Buscar respuesta”.</strong><br><br>
+          Este buscador está pensado para preguntas frecuentes y explicaciones claras sobre biodiversidad en entorno industrial. Si la consulta es muy específica o requiere criterio técnico interno, conviene complementarla con la documentación o el canal ambiental correspondiente.
+        </article>
+        ${renderResources()}
+      `;
+    }
+
+    function renderNoMatch(query){
+      results.innerHTML = `
+        <article class="answer-card">
+          <div class="answer-top">
+            <div>
+              <div class="label">Respuesta no encontrada</div>
+              <h2 class="question-title">No tengo una respuesta cerrada para esa formulación</h2>
+            </div>
+          </div>
+          <div class="answer-text">
+            He buscado una coincidencia para: <strong>${escapeHtml(query)}</strong>, pero no encuentro una respuesta suficientemente clara en esta versión del buscador.
+          </div>
+          <div class="note">
+            Prueba con otras formulaciones más directas, por ejemplo: “¿Qué es greenwashing?”, “¿Qué es una especie invasora?” o “¿Qué medidas favorecen la biodiversidad en una planta industrial?”.
+          </div>
+        </article>
+        <article class="related-card">
+          <h2>Pruebas rápidas</h2>
+          <div class="related-list">
+            ${quickQueries.slice(0,4).map(item => `<button class="related-item" data-query="${escapeHtml(item)}">${item}</button>`).join('')}
+          </div>
+        </article>
+        ${renderResources()}
+      `;
+      bindRelatedButtons();
+    }
+
+    function renderAnswer(entry){
+      const related = findRelated(entry);
+      results.innerHTML = `
+        <article class="answer-card">
+          <div class="answer-top">
+            <div>
+              <div class="label">Respuesta encontrada</div>
+              <h2 class="question-title">${entry.title}</h2>
+            </div>
+          </div>
+          <div class="answer-text">${entry.answer}</div>
+          <div class="note">
+            Esta respuesta está pensada como orientación divulgativa rápida. Para decisiones internas, técnicas o regulatorias, conviene contrastar con documentación específica y criterio ambiental aplicable.
+          </div>
+        </article>
+        ${related.length ? `
+          <article class="related-card">
+            <h2>También te puede interesar</h2>
+            <div class="related-list">
+              ${related.map(item => `<button class="related-item" data-query="${escapeHtml(item.title)}">${item.title}</button>`).join('')}
+            </div>
+          </article>
+        ` : ''}
+        ${renderResources()}
+      `;
+      bindRelatedButtons();
+    }
+
+    function bindRelatedButtons(){
+      document.querySelectorAll('[data-query]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          searchInput.value = btn.getAttribute('data-query');
+          runSearch();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+    }
+
+    function escapeHtml(text){
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function runSearch(){
+      const query = searchInput.value.trim();
+      if (!query) {
+        renderEmpty();
+        return;
+      }
+      const match = findBestMatch(query);
+      if (match) renderAnswer(match);
+      else renderNoMatch(query);
+    }
+
+    quickQueries.forEach(query => {
+      const button = document.createElement('button');
+      button.className = 'chip';
+      button.textContent = query;
+      button.addEventListener('click', () => {
+        searchInput.value = query;
+        runSearch();
+      });
+      quickChips.appendChild(button);
+    });
+
+    searchBtn.addEventListener('click', runSearch);
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      renderEmpty();
+      searchInput.focus();
+    });
+    searchInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') runSearch();
+    });
+
+    renderEmpty();
+  </script>
+</body>
+</html>
